@@ -15,6 +15,6 @@ export const Main: React.FC = () => (
             <SocialIcon type="telegram" href="https://t.me/dimastark"/>
             <SocialIcon type="vk" href="https://vk.com/dvstark"/>
         </ul>
-        <Separator beforePx={-12}/>
+        <Separator />
     </article>
 );
