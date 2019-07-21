@@ -1,13 +1,11 @@
 import React from 'react';
-import Typist from 'react-typist';
-
-import 'react-typist/dist/Typist.css';
 
 import { useColors } from '../../contexts/colors';
+import { Typist } from '../typist';
 
 import styles from './greeting.module.css';
 
-export const Greeting: React.FC = () => {
+export function Greeting() {
     const { primary: color } = useColors();
 
     return (
@@ -16,4 +14,4 @@ export const Greeting: React.FC = () => {
             <span>My name is <span style={{ color }}>dimastark</span>!</span>
         </Typist>
     );
-};
+}

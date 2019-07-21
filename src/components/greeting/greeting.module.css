@@ -1,10 +1,11 @@
-.greeting {
-    display: inline-block;
+.greeting
+{
+    font: 20px Monaco, monospace;
 
-    text-align: left;
+    display: inline-block;
 
     width: 265px;
     height: 55px;
 
-    font: 20px Monaco, monospace;
+    text-align: left;
 }

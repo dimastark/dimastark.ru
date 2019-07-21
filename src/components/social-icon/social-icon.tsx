@@ -55,7 +55,7 @@ function vk(color: string): ReactNode {
     );
 };
 
-export const SocialIcon = (props: ISocialIconProps) => {
+export function SocialIcon(props: ISocialIconProps) {
     const { type, href } = props;
     const { primary: color } = useColors();
 
@@ -64,4 +64,4 @@ export const SocialIcon = (props: ISocialIconProps) => {
             {{ email, github, telegram, vk }[type](color)}
         </a>
     );
-};
+}

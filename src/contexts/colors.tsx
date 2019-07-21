@@ -1,6 +1,17 @@
 import { createContext, useContext } from 'react';
 
-import { getPrimaryColor } from '../utils/colors';
+export function getPrimaryColor(): string {
+    const choices = [
+        '#000000',
+        '#F53030',
+        '#673AB7',
+        '#03A9F4',
+        '#4CBF50',
+        '#FF5722'
+    ];
+
+    return choices[Math.floor(Math.random() * choices.length)];
+}
 
 interface IColorsContext {
     primary: string;

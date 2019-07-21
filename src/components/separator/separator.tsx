@@ -4,7 +4,7 @@ import { useColors } from '../../contexts/colors';
 
 import styles from './separator.module.css';
 
-export const Separator: React.FC = () => {
+export function Separator() {
     const { primary: color } = useColors();
 
     return (
@@ -13,4 +13,4 @@ export const Separator: React.FC = () => {
             <polygon points="4,3 33,35 50,28 67,35 96,3 50,26" fill="#eceff1" />
         </svg>
     );
-};
+}
