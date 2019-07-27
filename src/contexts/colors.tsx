@@ -2,7 +2,6 @@ import { createContext, useContext } from 'react';
 
 export function getPrimaryColor(): string {
     const choices = [
-        '#000000',
         '#F53030',
         '#673AB7',
         '#03A9F4',
