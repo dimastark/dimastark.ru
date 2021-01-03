@@ -1,6 +1,7 @@
 module.exports = {
     siteMetadata: {
-        title: 'I am dimastark!'
+        title: 'I am dimastark!',
+        siteUrl: 'https://dimastark.ru'
     },
     plugins: [
         {
