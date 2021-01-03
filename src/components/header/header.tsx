@@ -13,7 +13,7 @@ export function Header() {
                 <SocialIcon type="email" href="mailto:dvstark@yandex.ru" />
                 <SocialIcon
                     type="linkedin"
-                    href="http://linkedin.com/dimastark"
+                    href="http://linkedin.com/in/dimastark"
                 />
                 <SocialIcon type="github" href="https://github.com/dimastark" />
                 <SocialIcon type="telegram" href="https://t.me/dimastark" />

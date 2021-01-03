@@ -8,14 +8,17 @@ import './global.css';
 import styles from './layout.module.css';
 
 interface ILayoutProps {
+    center?: boolean;
     children: JSX.Element[] | JSX.Element;
 }
 
-export function Layout({ children }: ILayoutProps) {
+export function Layout({ center = false, children }: ILayoutProps) {
     return (
         <>
             <Header />
-            <main className={styles.main}>{children}</main>
+            <main className={center ? styles.mainCenter : styles.main}>
+                {children}
+            </main>
             <Footer />
         </>
     );

@@ -1,8 +1,11 @@
-.main {
+.main,
+.mainCenter {
     min-width: 320px;
     max-width: 600px;
-    margin: 0 auto;
     margin-top: 30px;
+}
 
+.mainCenter {
+    margin: 0 auto;
     text-align: center;
 }

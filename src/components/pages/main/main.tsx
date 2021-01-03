@@ -8,7 +8,7 @@ import styles from './main.module.css';
 
 export function Main() {
     return (
-        <Layout>
+        <Layout center>
             <Helmet title="I am dimastark!" />
             <Separator />
             <div className={styles.aboutMe}>
