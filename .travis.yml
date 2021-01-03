@@ -9,7 +9,7 @@ script:
 
 deploy:
     provider: pages
-    local-dir: build
+    local-dir: public
     skip-cleanup: true
     keep-history: true
     fqdn: dimastark.ru
