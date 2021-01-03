@@ -1,0 +1,10 @@
+.greeting {
+    font: 20px Monaco, monospace;
+
+    display: inline-block;
+
+    width: 265px;
+    height: 55px;
+
+    text-align: left;
+}

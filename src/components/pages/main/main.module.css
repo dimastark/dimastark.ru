@@ -1,0 +1,25 @@
+.aboutMe {
+    font: 20px Monaco, monospace;
+
+    margin-top: 50px;
+}
+
+.yandex::first-letter {
+    color: #f00;
+}
+
+.cpp {
+    color: #064481;
+}
+
+.go {
+    color: #00add8;
+}
+
+.python {
+    color: #3572a5;
+}
+
+.js {
+    color: #8ec653;
+}
