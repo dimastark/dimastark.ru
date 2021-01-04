@@ -9,7 +9,9 @@ import styles from './main.module.css';
 export function Main() {
     return (
         <Layout center>
-            <Helmet title="I am dimastark!" />
+            <Helmet title="I am dimastark!">
+                <meta name="viewport" content="width=device-width, initial-scale=1" />
+            </Helmet>
             <Separator />
             <div className={styles.aboutMe}>
                 <div>
