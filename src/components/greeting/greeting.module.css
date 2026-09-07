@@ -9,4 +9,6 @@
     height: 55px;
 
     text-align: left;
+    /* Line breaks are explicit (<br/>); never let the cursor push a word to a new line. */
+    white-space: nowrap;
 }
