@@ -1,4 +1,4 @@
-import React from 'react';
+import type { ReactNode } from 'react';
 
 import { Footer } from 'src/components/footer';
 import { Header } from 'src/components/header';
@@ -9,7 +9,7 @@ import styles from './layout.module.css';
 
 interface ILayoutProps {
     center?: boolean;
-    children: JSX.Element[] | JSX.Element;
+    children: ReactNode;
 }
 
 export function Layout({ center = false, children }: ILayoutProps) {

@@ -1,3 +1,11 @@
 node_modules/
-.cache/
-public
+dist/
+*.tsbuildinfo
+*.local
+.DS_Store
+
+# Editor / tooling
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.claude/

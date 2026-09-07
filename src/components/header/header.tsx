@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { Greeting } from 'src/components/greeting';
 import { SocialIcon } from 'src/components/social-icon';
 
@@ -16,7 +14,7 @@ export function Header() {
                     href="http://linkedin.com/in/dimastark"
                 />
                 <SocialIcon type="github" href="https://github.com/dimastark" />
-                <SocialIcon type="telegram" href="https://t.me/dimastark" />
+                <SocialIcon type="telegram" href="https://t.me/dstarkv" />
                 <SocialIcon type="vk" href="https://vk.com/dvstark" />
             </ul>
         </header>
