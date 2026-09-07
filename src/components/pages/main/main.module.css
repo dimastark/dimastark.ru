@@ -1,5 +1,7 @@
 .aboutMe {
-    font: 20px Monaco, monospace;
+    font:
+        20px Monaco,
+        monospace;
 
     margin-top: 50px;
 }

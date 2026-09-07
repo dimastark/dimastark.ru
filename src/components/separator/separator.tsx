@@ -1,5 +1,3 @@
-import React from 'react';
-
 import * as colors from 'src/utils/colors';
 
 import styles from './separator.module.css';

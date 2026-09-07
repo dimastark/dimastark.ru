@@ -1,0 +1,13 @@
+.cursor::after {
+    content: '|';
+    margin-left: 1px;
+    font-weight: 400;
+
+    animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+    50% {
+        opacity: 0;
+    }
+}
