@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Битва со стрекозами 🐉</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; font-family: "Comic Sans MS", "Marker Felt", system-ui, sans-serif; }
+  #game {
+    position: relative; width: 100vw; height: 100vh; height: 100dvh;
+    background: linear-gradient(180deg, #7ec8ff 0%, #b8e6ff 55%, #c8f0a0 55%, #9cd85f 100%);
+    overflow: hidden; touch-action: manipulation; cursor: crosshair;
+  }
+
+  /* облака */
+  .cloud { position: absolute; background: #fff; border-radius: 50%; opacity: .85; pointer-events: none; }
+
+  /* верхняя панель */
+  #hud {
+    position: absolute; top: 0; left: 0; right: 0; z-index: 20;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: calc(10px + env(safe-area-inset-top)) 16px 10px; font-size: 22px; font-weight: bold; color: #23406b;
+    text-shadow: 0 1px 0 #fff; pointer-events: none;
+  }
+  .badge { background: rgba(255,255,255,.75); border-radius: 20px; padding: 6px 14px; }
+
+  /* стрекоза */
+  .dragonfly {
+    position: absolute; width: 80px; height: 80px; z-index: 10;
+    transform: translate(-50%, -50%); cursor: pointer; user-select: none;
+    transition: transform .05s;
+  }
+  .dragonfly:active { transform: translate(-50%, -50%) scale(.9); }
+  .dragonfly .wing { transform-origin: center; animation: flap .12s infinite alternate ease-in-out; }
+  @keyframes flap { from { transform: scaleY(1); } to { transform: scaleY(.35); } }
+
+  /* всплывающие очки */
+  .pop {
+    position: absolute; z-index: 15; font-size: 26px; font-weight: bold; color: #ffd400;
+    text-shadow: 0 2px 3px #a06500; pointer-events: none; transform: translate(-50%,-50%);
+    animation: floatUp .8s ease-out forwards;
+  }
+  @keyframes floatUp { to { transform: translate(-50%,-140%); opacity: 0; } }
+
+  /* экраны */
+  .screen {
+    position: absolute; inset: 0; z-index: 30;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; gap: 20px; padding: 24px;
+    background: rgba(20,40,70,.55); backdrop-filter: blur(3px); color: #fff;
+  }
+  .screen h1 { font-size: clamp(30px, 8vw, 64px); text-shadow: 0 4px 0 rgba(0,0,0,.25); }
+  .screen p { font-size: clamp(16px, 4.5vw, 24px); max-width: 640px; line-height: 1.4; }
+  .btn {
+    font-family: inherit; font-size: clamp(20px, 5vw, 30px); font-weight: bold;
+    padding: 16px 40px; border: none; border-radius: 40px; cursor: pointer;
+    background: linear-gradient(180deg, #ffd84d, #ffab00); color: #6b3b00;
+    box-shadow: 0 6px 0 #c47c00, 0 10px 18px rgba(0,0,0,.3); transition: transform .08s, box-shadow .08s;
+  }
+  .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #c47c00, 0 4px 10px rgba(0,0,0,.3); }
+  .btn.pay { background: linear-gradient(180deg, #7dffa0, #16c46a); color: #05421f; box-shadow: 0 6px 0 #0c8f4c, 0 10px 18px rgba(0,0,0,.3); }
+  .btn.pay:active { box-shadow: 0 2px 0 #0c8f4c, 0 4px 10px rgba(0,0,0,.3); }
+  .btn:disabled { filter: grayscale(.7) brightness(.9); cursor: not-allowed; }
+  .hidden { display: none !important; }
+
+  /* сундук */
+  .chest { font-size: clamp(90px, 30vw, 200px); line-height: 1; animation: wobble 1.2s infinite ease-in-out; }
+  @keyframes wobble { 0%,100%{transform:rotate(-4deg)} 50%{transform:rotate(4deg)} }
+  .prize { font-size: clamp(70px, 26vw, 170px); animation: pop-in .5s cubic-bezier(.2,1.6,.4,1); }
+  @keyframes pop-in { from{transform:scale(0)} to{transform:scale(1)} }
+
+  /* молния и вспышка */
+  .bolt { position: absolute; inset: 0; z-index: 14; pointer-events: none; animation: boltFade .18s ease-out forwards; }
+  @keyframes boltFade { 0%{opacity:1} 65%{opacity:1} 100%{opacity:0} }
+  .flash { position: absolute; inset: 0; z-index: 13; background: #fff; pointer-events: none; animation: flashFade .16s ease-out forwards; }
+  @keyframes flashFade { from{opacity:.55} to{opacity:0} }
+
+  /* ветер: вихрь и кольцо */
+  .gustfx { position: absolute; z-index: 14; transform: translate(-50%,-50%); pointer-events: none; font-size: 52px; animation: gustAnim .5s ease-out forwards; }
+  @keyframes gustAnim { from{transform:translate(-50%,-50%) scale(.3); opacity:1} to{transform:translate(-50%,-50%) scale(2.6) rotate(90deg); opacity:0} }
+  .ring { position: absolute; z-index: 13; border: 5px dashed #fff; border-radius: 50%; width: 60px; height: 60px; pointer-events: none; transform: translate(-50%,-50%); animation: ringAnim .5s ease-out forwards; }
+  @keyframes ringAnim { from{transform:translate(-50%,-50%) scale(.4); opacity:.9} to{transform:translate(-50%,-50%) scale(5); opacity:0} }
+
+  /* панель выбора оружия */
+  #weaponBar { position: absolute; bottom: calc(12px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); z-index: 25; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; max-width: 96vw; }
+  .wbtn {
+    font-family: inherit; font-size: 26px; padding: 8px 18px; border: none; border-radius: 18px; cursor: pointer;
+    background: rgba(255,255,255,.78); color: #23406b; display: flex; flex-direction: column; align-items: center; line-height: 1.1;
+    box-shadow: 0 4px 0 rgba(0,0,0,.15);
+  }
+  .wbtn span { font-size: 13px; font-weight: bold; margin-top: 2px; }
+  .wbtn.active { background: linear-gradient(180deg,#fff3b0,#ffd84d); outline: 3px solid #ffab00; }
+  .wbtn.ult { background: linear-gradient(180deg,#ff8a8a,#e02424); color: #fff; }
+  .wbtn.ult:disabled { filter: grayscale(.5) brightness(.85); opacity: .85; cursor: not-allowed; }
+  .wbtn.ult.ready { animation: ultPulse .7s infinite alternate; outline: 3px solid #fff; }
+  @keyframes ultPulse {
+    from { box-shadow: 0 4px 0 rgba(0,0,0,.15), 0 0 0 rgba(255,60,0,.6); }
+    to   { box-shadow: 0 4px 0 rgba(0,0,0,.15), 0 0 28px rgba(255,60,0,.95); }
+  }
+
+  /* апокалипсис */
+  .shake { animation: shake .5s infinite; }
+  @keyframes shake { 0%,100%{transform:translate(0,0)} 20%{transform:translate(-8px,6px)} 40%{transform:translate(7px,-7px)} 60%{transform:translate(-6px,-5px)} 80%{transform:translate(6px,7px)} }
+  .apoc-sky { position: absolute; inset: 0; z-index: 12; pointer-events: none; background: radial-gradient(circle, rgba(255,80,0,.35), rgba(120,0,0,.6)); animation: skyPulse 1.3s ease-out forwards; }
+  @keyframes skyPulse { 0%{opacity:0} 15%{opacity:1} 100%{opacity:0} }
+  .meteor { position: absolute; top: -60px; z-index: 16; font-size: 44px; pointer-events: none; animation: meteorFall 1s linear forwards; }
+  @keyframes meteorFall { from{transform:translateY(0) rotate(45deg)} to{transform:translateY(112vh) rotate(45deg)} }
+  .burstfx { position: absolute; z-index: 17; font-size: 60px; transform: translate(-50%,-50%); pointer-events: none; animation: burstAnim .5s ease-out forwards; }
+  @keyframes burstAnim { from{transform:translate(-50%,-50%) scale(.3); opacity:1} to{transform:translate(-50%,-50%) scale(2.2); opacity:0} }
+
+  /* конфетти */
+  .confetti { position: absolute; width: 12px; height: 12px; top: -20px; z-index: 40; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="hud">
+    <span class="badge">🐉 Стрекоз: <span id="left">0</span></span>
+    <span class="badge">🪙 <span id="coins">0</span></span>
+  </div>
+
+  <!-- Старт -->
+  <div class="screen" id="startScreen">
+    <h1>🐉 Битва со стрекозами</h1>
+    <p>Бей стрекоз молнией ⚡ или сдувай ветром 🌬️ — и враги улетают прочь!<br>За удары копится 💥 <b>Апокалипсис</b>: когда кнопка загорится «ГОТОВ!» — жми и снеси всех разом!<br>За каждую стрекозу дают монетки 🪙. Победишь всех — заплати и получи бонус из сундука!</p>
+    <button class="btn" id="startBtn">Играть! ▶</button>
+  </div>
+
+  <!-- Сундук: заплатить -->
+  <div class="screen hidden" id="chestScreen">
+    <h1>Ты победил всех стрекоз! 🎉</h1>
+    <div class="chest">🧰</div>
+    <p>Чтобы открыть волшебный сундук, заплати <b><span id="price">30</span> 🪙</b>.<br>У тебя есть <b><span id="haveCoins">0</span> 🪙</b>.</p>
+    <button class="btn pay" id="payBtn">Заплатить и открыть 🔓</button>
+    <p id="notEnough" class="hidden" style="color:#ffd0d0">Не хватает монеток... но так уж и быть, играем дальше! 😉</p>
+  </div>
+
+  <!-- Бонус -->
+  <div class="screen hidden" id="bonusScreen">
+    <h1>🎁 БОНУС!</h1>
+    <div class="prize" id="prizeEmoji">👑</div>
+    <p id="prizeText">Ты получил золотую корону!</p>
+    <button class="btn" id="againBtn">Играть ещё раз 🔁</button>
+  </div>
+
+  <!-- выбор оружия -->
+  <div id="weaponBar">
+    <button class="wbtn active" data-w="bolt">⚡<span>Молния</span></button>
+    <button class="wbtn" data-w="wind">🌬️<span>Ветер</span></button>
+    <button class="wbtn ult" id="ultBtn" disabled>💥<span id="ultLabel">0%</span></button>
+  </div>
+</div>
+
+<script>
+const game = document.getElementById('game');
+const leftEl = document.getElementById('left');
+const coinsEl = document.getElementById('coins');
+const startScreen = document.getElementById('startScreen');
+const chestScreen = document.getElementById('chestScreen');
+const bonusScreen = document.getElementById('bonusScreen');
+
+const TOTAL = 30;          // сколько стрекоз за игру всего
+const MAX_ON_SCREEN = 12;  // сколько летает одновременно
+const COINS_PER_KILL = 5;  // монеток за обычную стрекозу
+const PRICE = 30;          // цена сундука
+document.getElementById('price').textContent = PRICE;
+
+let coins = 0, aliveNeeded = 0, flies = [], running = false, lastT = 0, spawnedCount = 0;
+let weapon = 'bolt', chestPending = false, charge = 0, inApoc = false;
+
+// SVG-стрекоза заданного цвета
+function dragonflySVG(color, wing) {
+  return `<svg viewBox="0 0 100 100" width="80" height="80" xmlns="http://www.w3.org/2000/svg">
+    <g class="wing">
+      <ellipse cx="30" cy="35" rx="26" ry="9" fill="${wing}" opacity=".85"/>
+      <ellipse cx="70" cy="35" rx="26" ry="9" fill="${wing}" opacity=".85"/>
+      <ellipse cx="30" cy="55" rx="22" ry="8" fill="${wing}" opacity=".7"/>
+      <ellipse cx="70" cy="55" rx="22" ry="8" fill="${wing}" opacity=".7"/>
+    </g>
+    <rect x="47" y="40" width="6" height="45" rx="3" fill="${color}"/>
+    <circle cx="50" cy="38" r="11" fill="${color}"/>
+    <circle cx="45" cy="35" r="4" fill="#fff"/><circle cx="55" cy="35" r="4" fill="#fff"/>
+    <circle cx="45" cy="35" r="2" fill="#111"/><circle cx="55" cy="35" r="2" fill="#111"/>
+  </svg>`;
+}
+
+function rand(a, b) { return a + Math.random() * (b - a); }
+
+function spawnFly() {
+  const golden = Math.random() < 0.22; // золотые стоят дороже
+  const el = document.createElement('div');
+  el.className = 'dragonfly';
+  el.innerHTML = golden
+    ? dragonflySVG('#ffbf00', '#fff3b0')
+    : dragonflySVG('#3a7bd5', '#cde7ff');
+  const f = {
+    el, golden,
+    x: rand(60, innerWidth - 60),
+    y: rand(90, innerHeight - 120),
+    vx: rand(-140, 140), vy: rand(-110, 110),
+    reward: golden ? COINS_PER_KILL * 3 : COINS_PER_KILL,
+    dead: false
+  };
+  el.__fly = f;
+  game.appendChild(el);
+  flies.push(f);
+  spawnedCount++;
+}
+
+// поддерживаем на небе не больше MAX_ON_SCREEN, пока не выпустили всех TOTAL
+function topUp() {
+  let onScreen = 0;
+  for (const f of flies) if (!f.dead) onScreen++;
+  while (onScreen < MAX_ON_SCREEN && spawnedCount < TOTAL) { spawnFly(); onScreen++; }
+}
+
+// общий приём: стрекоза побеждена и улетает с заданной скоростью
+function defeat(f, vx, vy) {
+  if (f.dead) return;
+  f.dead = true;
+  coins += f.reward;
+  coinsEl.textContent = coins;
+  aliveNeeded--;
+  leftEl.textContent = aliveNeeded;
+  showPop(f.x, f.y, '+' + f.reward);
+  f.flying = true;
+  f.vx = vx; f.vy = vy;
+  f.spin = rand(-14, 14);
+  f.el.style.zIndex = 5;
+  addCharge(0.14);
+  if (aliveNeeded <= 0 && !chestPending) { chestPending = true; setTimeout(showChest, 900); }
+}
+
+// удар молнии по одной стрекозе — улетает к ближайшему краю и вверх
+function hitBolt(f) {
+  if (f.dead) return;
+  lightning(f.x, f.y);
+  zap();
+  const dir = f.x < innerWidth / 2 ? -1 : 1;
+  defeat(f, dir * rand(500, 850), -rand(550, 900));
+}
+
+// порыв ветра — сдувает всех стрекоз рядом с точкой (x, y) в стороны
+function gust(x, y) {
+  windFX(x, y);
+  whoosh();
+  const R = 175;
+  for (const f of flies) {
+    if (f.dead) continue;
+    const dx = f.x - x, dy = f.y - y, dist = Math.hypot(dx, dy);
+    if (dist < R) {
+      const n = dist || 1;
+      defeat(f, dx / n * rand(750, 1050), dy / n * rand(750, 1050) - 180);
+    }
+  }
+}
+
+function showPop(x, y, text) {
+  const p = document.createElement('div');
+  p.className = 'pop'; p.textContent = text;
+  p.style.left = x + 'px'; p.style.top = y + 'px';
+  game.appendChild(p);
+  setTimeout(() => p.remove(), 800);
+}
+
+function loop(t) {
+  if (!running) return;
+  const dt = Math.min((t - lastT) / 1000, 0.05); lastT = t;
+  topUp();
+  for (const f of flies) {
+    if (f.dead && !f.flying) continue;
+    // подбитая стрекоза улетает за экран
+    if (f.flying) {
+      f.x += f.vx * dt; f.y += f.vy * dt;
+      f.el.style.left = f.x + 'px'; f.el.style.top = f.y + 'px';
+      f.el.style.transform = `translate(-50%,-50%) rotate(${(f.spin * f.x / 40) % 360}deg)`;
+      if (f.x < -120 || f.x > innerWidth + 120 || f.y < -120 || f.y > innerHeight + 120) {
+        f.el.remove(); f.flying = false;
+      }
+      continue;
+    }
+    f.x += f.vx * dt; f.y += f.vy * dt;
+    if (f.x < 50 || f.x > innerWidth - 50) { f.vx *= -1; f.x = Math.max(50, Math.min(innerWidth - 50, f.x)); }
+    if (f.y < 80 || f.y > innerHeight - 90) { f.vy *= -1; f.y = Math.max(80, Math.min(innerHeight - 90, f.y)); }
+    // лёгкое виляние
+    f.vx += rand(-30, 30) * dt; f.vy += rand(-30, 30) * dt;
+    const sp = Math.hypot(f.vx, f.vy), max = f.golden ? 260 : 190;
+    if (sp > max) { f.vx = f.vx / sp * max; f.vy = f.vy / sp * max; }
+    f.el.style.left = f.x + 'px'; f.el.style.top = f.y + 'px';
+    f.el.style.transform = `translate(-50%,-50%) scaleX(${f.vx < 0 ? -1 : 1})`;
+  }
+  requestAnimationFrame(loop);
+}
+
+function startGame() {
+  flies.forEach(f => f.el.remove()); flies = [];
+  coins = 0; coinsEl.textContent = 0;
+  aliveNeeded = TOTAL; leftEl.textContent = TOTAL;
+  chestPending = false; charge = 0; inApoc = false; updateUlt();
+  startScreen.classList.add('hidden');
+  chestScreen.classList.add('hidden');
+  bonusScreen.classList.add('hidden');
+  spawnedCount = 0; topUp();
+  running = true; lastT = performance.now();
+  requestAnimationFrame(loop);
+}
+
+function showChest() {
+  running = false;
+  document.getElementById('haveCoins').textContent = coins;
+  document.getElementById('notEnough').classList.add('hidden');
+  const payBtn = document.getElementById('payBtn');
+  payBtn.disabled = false;
+  chestScreen.classList.remove('hidden');
+}
+
+const PRIZES = [
+  ['👑', 'Ты получил золотую корону!'],
+  ['💎', 'Тебе достался огромный алмаз!'],
+  ['🐲', 'Ты приручил дракона!'],
+  ['⭐', 'Звезда суперчемпиона твоя!'],
+  ['🏆', 'Кубок победителя стрекоз!'],
+  ['🦄', 'Волшебный единорог — твой друг!'],
+];
+
+function openChest() {
+  if (coins < PRICE) {
+    // по-доброму: не хватило — всё равно даём поиграть дальше
+    document.getElementById('notEnough').classList.remove('hidden');
+    document.getElementById('payBtn').disabled = true;
+    setTimeout(startGame, 1800);
+    return;
+  }
+  coins -= PRICE; coinsEl.textContent = coins;
+  beep(1046); setTimeout(() => beep(1318), 120); setTimeout(() => beep(1568), 240);
+  chestScreen.classList.add('hidden');
+  const [emoji, text] = PRIZES[Math.floor(Math.random() * PRIZES.length)];
+  document.getElementById('prizeEmoji').textContent = emoji;
+  document.getElementById('prizeText').textContent = text;
+  bonusScreen.classList.remove('hidden');
+  confetti();
+}
+
+function confetti() {
+  const colors = ['#ff5252','#ffd400','#40c4ff','#69f0ae','#e040fb','#ff9100'];
+  for (let i = 0; i < 80; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.background = colors[i % colors.length];
+    c.style.borderRadius = Math.random() < .5 ? '50%' : '2px';
+    const dur = rand(1.8, 3.5), delay = rand(0, .8);
+    c.animate([
+      { transform: `translateY(0) rotate(0)`, opacity: 1 },
+      { transform: `translateY(110vh) rotate(${rand(360,1080)}deg)`, opacity: 1 }
+    ], { duration: dur * 1000, delay: delay * 1000, easing: 'linear' });
+    game.appendChild(c);
+    setTimeout(() => c.remove(), (dur + delay) * 1000);
+  }
+}
+
+// удар молнии с неба в точку (x, y)
+function lightning(x, y) {
+  const flash = document.createElement('div');
+  flash.className = 'flash';
+  game.appendChild(flash);
+  setTimeout(() => flash.remove(), 160);
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('class', 'bolt');
+  svg.setAttribute('width', innerWidth);
+  svg.setAttribute('height', innerHeight);
+  const steps = Math.max(4, Math.floor(y / 45));
+  let d = `M ${x} 0`;
+  for (let i = 1; i <= steps; i++) {
+    const cy = y * i / steps;
+    const cx = i === steps ? x : x + rand(-32, 32) * (1 - i / steps);
+    d += ` L ${cx} ${cy}`;
+  }
+  const glow = document.createElementNS(NS, 'path');
+  glow.setAttribute('d', d);
+  glow.setAttribute('stroke', '#bde7ff'); glow.setAttribute('stroke-width', '16');
+  glow.setAttribute('fill', 'none'); glow.setAttribute('opacity', '.5');
+  glow.setAttribute('stroke-linecap', 'round'); glow.setAttribute('stroke-linejoin', 'round');
+  const path = glow.cloneNode();
+  path.setAttribute('stroke', '#fff'); path.setAttribute('stroke-width', '6'); path.setAttribute('opacity', '1');
+  path.setAttribute('filter', 'drop-shadow(0 0 8px #7bd3ff)');
+  svg.appendChild(glow); svg.appendChild(path);
+  game.appendChild(svg);
+  setTimeout(() => svg.remove(), 180);
+}
+
+// звук удара молнии
+function zap() {
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(1200, actx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(120, actx.currentTime + .18);
+    o.connect(g); g.connect(actx.destination);
+    g.gain.setValueAtTime(.15, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, actx.currentTime + .2);
+    o.start(); o.stop(actx.currentTime + .2);
+  } catch (e) {}
+}
+
+// вихрь ветра в точке (x, y)
+function windFX(x, y) {
+  const ring = document.createElement('div');
+  ring.className = 'ring';
+  ring.style.left = x + 'px'; ring.style.top = y + 'px';
+  game.appendChild(ring);
+  setTimeout(() => ring.remove(), 520);
+  const g = document.createElement('div');
+  g.className = 'gustfx'; g.textContent = '💨';
+  g.style.left = x + 'px'; g.style.top = y + 'px';
+  game.appendChild(g);
+  setTimeout(() => g.remove(), 520);
+}
+
+// звук порыва ветра
+function whoosh() {
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const dur = 0.4;
+    const buf = actx.createBuffer(1, actx.sampleRate * dur, actx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    const src = actx.createBufferSource(); src.buffer = buf;
+    const filt = actx.createBiquadFilter(); filt.type = 'bandpass'; filt.Q.value = 0.8;
+    filt.frequency.setValueAtTime(300, actx.currentTime);
+    filt.frequency.exponentialRampToValueAtTime(2200, actx.currentTime + dur);
+    const g = actx.createGain();
+    g.gain.setValueAtTime(0.0001, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.28, actx.currentTime + 0.12);
+    g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + dur);
+    src.connect(filt); filt.connect(g); g.connect(actx.destination);
+    src.start();
+  } catch (e) {}
+}
+
+// ---- Апокалипсис (супер-удар) ----
+const ultBtn = document.getElementById('ultBtn');
+const ultLabel = document.getElementById('ultLabel');
+
+function addCharge(a) {
+  if (inApoc || charge >= 1) return;
+  charge = Math.min(1, charge + a);
+  updateUlt();
+}
+function updateUlt() {
+  if (charge >= 1) {
+    ultBtn.disabled = false;
+    ultBtn.classList.add('ready');
+    ultLabel.textContent = 'ГОТОВ!';
+  } else {
+    ultBtn.disabled = true;
+    ultBtn.classList.remove('ready');
+    ultLabel.textContent = Math.floor(charge * 100) + '%';
+  }
+}
+
+function burst(x, y) {
+  const b = document.createElement('div');
+  b.className = 'burstfx'; b.textContent = '💥';
+  b.style.left = x + 'px'; b.style.top = y + 'px';
+  game.appendChild(b);
+  setTimeout(() => b.remove(), 500);
+}
+
+function apocalypse() {
+  if (charge < 1 || !running || inApoc) return;
+  inApoc = true;
+  charge = 0; updateUlt();
+  boom();
+  game.classList.add('shake');
+  const sky = document.createElement('div'); sky.className = 'apoc-sky';
+  game.appendChild(sky);
+  // дождь из метеоров
+  for (let i = 0; i < 16; i++) {
+    const m = document.createElement('div');
+    m.className = 'meteor'; m.textContent = Math.random() < 0.5 ? '☄️' : '🌠';
+    m.style.left = rand(0, 100) + 'vw';
+    m.style.animationDelay = rand(0, 0.5) + 's';
+    game.appendChild(m);
+    setTimeout(() => m.remove(), 1500);
+  }
+  // взрыв всех оставшихся стрекоз
+  setTimeout(() => {
+    for (const f of flies) {
+      if (f.dead) continue;
+      burst(f.x, f.y);
+      defeat(f, rand(-900, 900), -rand(300, 1100));
+    }
+    inApoc = false;
+  }, 500);
+  setTimeout(() => { game.classList.remove('shake'); sky.remove(); }, 1300);
+}
+
+// звук взрыва апокалипсиса
+function boom() {
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const t = actx.currentTime;
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(120, t);
+    o.frequency.exponentialRampToValueAtTime(30, t + 0.7);
+    g.gain.setValueAtTime(0.4, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.9);
+    o.connect(g); g.connect(actx.destination); o.start(); o.stop(t + 0.9);
+    const dur = 0.9;
+    const buf = actx.createBuffer(1, actx.sampleRate * dur, actx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+    const src = actx.createBufferSource(); src.buffer = buf;
+    const f = actx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 800;
+    const g2 = actx.createGain();
+    g2.gain.setValueAtTime(0.5, t); g2.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    src.connect(f); f.connect(g2); g2.connect(actx.destination); src.start();
+  } catch (e) {}
+}
+
+// простой звук через Web Audio
+let actx;
+function beep(freq) {
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = 'square'; o.frequency.value = freq;
+    o.connect(g); g.connect(actx.destination);
+    g.gain.setValueAtTime(.12, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, actx.currentTime + .18);
+    o.start(); o.stop(actx.currentTime + .18);
+  } catch (e) {}
+}
+
+// облака для красоты
+(function clouds() {
+  for (let i = 0; i < 6; i++) {
+    const c = document.createElement('div');
+    c.className = 'cloud';
+    const w = rand(80, 180);
+    c.style.width = w + 'px'; c.style.height = w * .6 + 'px';
+    c.style.left = rand(0, 90) + 'vw'; c.style.top = rand(2, 40) + 'vh';
+    game.appendChild(c);
+  }
+})();
+
+// атака по полю: молния — по стрекозе, ветер — порыв в точке
+game.addEventListener('pointerdown', (e) => {
+  if (!running) return;
+  if (e.target.closest('#weaponBar')) return;
+  if (weapon === 'bolt') {
+    const dEl = e.target.closest('.dragonfly');
+    if (dEl && dEl.__fly && !dEl.__fly.dead) hitBolt(dEl.__fly);
+  } else {
+    gust(e.clientX, e.clientY);
+  }
+});
+
+// переключение оружия (молния / ветер)
+document.querySelectorAll('.wbtn:not(.ult)').forEach(b => {
+  b.addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
+    weapon = b.dataset.w;
+    document.querySelectorAll('.wbtn:not(.ult)').forEach(x => x.classList.toggle('active', x === b));
+  });
+});
+
+// кнопка апокалипсиса — срабатывает только когда заряжена
+ultBtn.addEventListener('pointerdown', (e) => {
+  e.stopPropagation();
+  if (!ultBtn.disabled) apocalypse();
+});
+
+document.getElementById('startBtn').onclick = startGame;
+document.getElementById('payBtn').onclick = openChest;
+document.getElementById('againBtn').onclick = startGame;
+</script>
+</body>
+</html>
